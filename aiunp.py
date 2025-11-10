@@ -11,14 +11,12 @@ parser = argparse.ArgumentParser(
     description='Распаковщик установочных файлов, собранных Actual Installer',
     epilog='Автор: Мейсак Илья Николаевич, 2025.11.09')
 
-parser.add_argument('file', help='путь к файлу')
-parser.add_argument('-savezip', action='store_true',
-                    help='сохранить ZIP-архивы на диск')
-parser.add_argument('-noextract', action='store_true',
-                    help='не распаковывать ZIP-архивы')
+parser.add_argument('installer', help='путь к файлу инсталлятора')
+parser.add_argument('-ziponly', action='store_true',
+                    help='сохранить только не распакованные ZIP-архивы')
 args = parser.parse_args()
 
-exe_name = args.file
+exe_name = args.installer
 dir_name = os.path.splitext(exe_name)[0]
 shutil.rmtree(dir_name, ignore_errors=True)
 os.makedirs(dir_name, exist_ok=True)
@@ -37,22 +35,22 @@ while True:
     if end_zip == -1:
         break
     end_zip += 22 + int.from_bytes(file[end_zip + 20:end_zip + 22], 'little')
+    zip_bytes = file[start_zip:end_zip]
     file_pointer = end_zip
 
-    # распаковать архивы из памяти не сохраняя на диск
-    if not args.noextract:
-        with zipfile.ZipFile(io.BytesIO(file[start_zip:end_zip])) as zip_file:
-            zip_file.extractall(dir_name)
-
-    # сохранить нераспакованные архивы на диск
-    if args.savezip:
+    if not args.ziponly:
+        # распаковать архивы из памяти не сохраняя на диск
+        with zipfile.ZipFile(io.BytesIO(zip_bytes)) as zf:
+            zf.extractall(dir_name)
+    else:
+        # сохранить нераспакованные архивы на диск
         n += 1
         zip_name = f'{dir_name}\\{n}.zip'
         with open(zip_name, 'wb') as f:
-            f.write(file[start_zip:end_zip])
+            f.write(zip_bytes)
 
 
-if not args.noextract:
+if not args.ziponly:
     # открыть файл конфигурации сборки
     config = configparser.ConfigParser()
     with open(f'{dir_name}\\aisetup.ini', encoding='utf-8-sig') as f:

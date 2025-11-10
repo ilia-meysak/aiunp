@@ -4,5 +4,5 @@ Actual Installer Unpacker
 
 usage:
 ```
-python aiunp.py [-h] [-savezip] [-noextract] installer.exe
+python aiunp.py [-h] [-ziponly] installer.exe
 ```

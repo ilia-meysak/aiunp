@@ -45,7 +45,7 @@ while True:
     else:
         # сохранить нераспакованные архивы на диск
         n += 1
-        zip_name = f'{dir_name}\\{n}.zip'
+        zip_name = f'{dir_name}/{n}.zip'
         with open(zip_name, 'wb') as f:
             f.write(zip_bytes)
 
@@ -53,10 +53,12 @@ while True:
 if not args.ziponly:
     # открыть файл конфигурации сборки
     config = configparser.ConfigParser()
-    with open(f'{dir_name}\\aisetup.ini', encoding='utf-8-sig') as f:
+    with open(f'{dir_name}/aisetup.ini', encoding='utf-8-sig') as f:
         config.read_file(f)
 
     # переименовать распакованные файлы
     for key, val in zip(config['Files'].keys(), config['Files'].values()):
-        os.renames(os.path.join(dir_name, key), os.path.join(dir_name,
-            re.findall(r'^<InstallDir>\\(.*)\?11$', val)[0]))
+        old = os.path.join(dir_name, key)
+        new = os.path.join(dir_name, re.findall(
+            r'^<InstallDir>\\(.*)\?11$', val)[0].replace('\\', '/'))
+        os.renames(old, new)
